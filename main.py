@@ -163,6 +163,16 @@ def free_talk(m):
         bot.send_message(m.chat.id, "Я слушаю тебя, но мысли путаются. Скажи еще раз?")
 
 if __name__ == '__main__':
+    # Включаем "пинатель"
     keep_alive()
+    
+    # Запускаем Flask на правильном порту для Render
+    port = int(os.environ.get('PORT', 10000))
+    threading.Thread(target=lambda: app.run(host='0.0.0.0', port=port), daemon=True).start()
+    
+    # Даем Telegram понять, что мы закрыли старые сессии
     bot.remove_webhook()
-    bot.infinity_polling(timeout=10, long_polling_timeout=5)
+    time.sleep(1) # Короткая пауза для очистки конфликтов
+    
+    print("MindTrace Bot is starting...")
+    bot.infinity_polling(timeout=20, long_polling_timeout=10)
