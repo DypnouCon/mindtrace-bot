@@ -5,10 +5,10 @@ from huggingface_hub import InferenceClient
 from threading import Thread
 from flask import Flask
 
-# --- СЕРВЕР-ЗАГЛУШКА ---
+# --- СЕРВЕР-ЗАГЛУШКА ДЛЯ RENDER ---
 app = Flask('')
 @app.route('/')
-def home(): return "MindTrace is Online"
+def home(): return "MindTrace is protected and running."
 
 def run():
     port = int(os.environ.get('PORT', 8080))
@@ -17,25 +17,24 @@ def run():
 def keep_alive():
     Thread(target=run).start()
 
-# --- КОНФИГУРАЦИЯ ---
-BOT_TOKEN = "8255523498:AAFCEOEYV84iLyieHHrTkU3dTQzlZwrSdMs"
-HF_TOKEN = "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"
+# --- БЕЗОПАСНАЯ КОНФИГУРАЦИЯ (Берем из настроек Render) ---
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
+HF_TOKEN = os.environ.get('HF_TOKEN')
 
 bot = telebot.TeleBot(BOT_TOKEN)
-# Указываем модель напрямую в клиенте
 client = InferenceClient(model="Qwen/Qwen2.5-72B-Instruct", token=HF_TOKEN)
 
 user_states = {}
 
 TEXTS = {
     'ru': {
-        'start': "✨ Здравствуй, Жора. Я — MindTrace. Здесь твоя тихая гавань. Как мне тебя называть?",
+        'start': "✨ Здравствуй, Жора. Я — MindTrace. Твоя тихая гавань. Как мне тебя называть?",
         'lang_selected': "Выбран русский язык. 🇷🇺",
         'element': "Какая стихия тебе сейчас ближе?",
         'heart': "💓 Что сейчас у тебя на сердце?",
         'shadow': "🌑 О чем ты обычно молчишь?",
         'genre': "🎭 В каком жанре твоя жизнь?",
-        'processing': "🧬 Соединяю нити... Подожди немного.",
+        'processing': "🧬 Соединяю нити... Твой портрет почти готов.",
         'disclaimer': "\n\n--- \n⚠️ Помни: я — ИИ. Если тяжело, обратись к врачу.",
         'error': "🔮 Туман в гавани... Попробуй еще раз через минуту."
     },
@@ -54,11 +53,11 @@ TEXTS = {
 
 def get_ai_response(user_data):
     lang = user_data.get('lang', 'ru')
-    system_msg = f"You are MindTrace, an empathetic AI psychologist. Be warm. Answer strictly in {lang}."
+    system_msg = f"You are MindTrace, an empathetic AI psychologist. Be poetic and supportive. Answer strictly in {lang}."
     user_msg = f"Name: {user_data.get('name')}, Element: {user_data.get('element')}, Heart: {user_data.get('heart')}, Shadow: {user_data.get('shadow')}, Genre: {user_data.get('genre')}."
 
     try:
-        # Упрощенный вызов без стриминга для стабильности на Render
+        # Упрощенный запрос без стриминга для стабильности
         response = client.chat_completion(
             messages=[
                 {"role": "system", "content": system_msg},
@@ -69,15 +68,15 @@ def get_ai_response(user_data):
         )
         return response.choices[0].message.content + TEXTS[lang]['disclaimer']
     except Exception as e:
-        print(f"!!! AI ERROR: {e}") # Это появится в логах Render
+        print(f"!!! AI ERROR: {e}")
         return TEXTS[lang]['error']
 
-# --- ОБРАБОТЧИКИ (без изменений логики) ---
+# --- ОБРАБОТЧИКИ ---
 @bot.message_handler(commands=['start'])
 def start(m):
     markup = types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     markup.add('Русский 🇷🇺', 'English 🇺🇸')
-    bot.send_message(m.chat.id, "Choose language:", reply_markup=markup)
+    bot.send_message(m.chat.id, "Выберите язык / Choose language:", reply_markup=markup)
 
 @bot.message_handler(func=lambda m: m.text in ['Русский 🇷🇺', 'English 🇺🇸'])
 def set_l(m):
@@ -96,18 +95,21 @@ def get_n(m):
 
 @bot.message_handler(func=lambda m: user_states.get(m.chat.id, {}).get('step') == 'element')
 def get_e(m):
+    lang = user_states[m.chat.id]['lang']
     user_states[m.chat.id].update({'element': m.text, 'step': 'heart'})
-    bot.send_message(m.chat.id, TEXTS[user_states[m.chat.id]['lang']]['heart'], reply_markup=types.ReplyKeyboardRemove())
+    bot.send_message(m.chat.id, TEXTS[lang]['heart'], reply_markup=types.ReplyKeyboardRemove())
 
 @bot.message_handler(func=lambda m: user_states.get(m.chat.id, {}).get('step') == 'heart')
 def get_h(m):
+    lang = user_states[m.chat.id]['lang']
     user_states[m.chat.id].update({'heart': m.text, 'step': 'shadow'})
-    bot.send_message(m.chat.id, TEXTS[user_states[m.chat.id]['lang']]['shadow'])
+    bot.send_message(m.chat.id, TEXTS[lang]['shadow'])
 
 @bot.message_handler(func=lambda m: user_states.get(m.chat.id, {}).get('step') == 'shadow')
 def get_s(m):
+    lang = user_states[m.chat.id]['lang']
     user_states[m.chat.id].update({'shadow': m.text, 'step': 'genre'})
-    bot.send_message(m.chat.id, TEXTS[user_states[m.chat.id]['lang']]['genre'])
+    bot.send_message(m.chat.id, TEXTS[lang]['genre'])
 
 @bot.message_handler(func=lambda m: user_states.get(m.chat.id, {}).get('step') == 'genre')
 def get_g(m):
