@@ -121,4 +121,6 @@ def get_g(m):
 
 if __name__ == '__main__':
     keep_alive()
-    bot.infinity_polling()
+    # Добавляем skip_pending, чтобы бот не пытался ответить на старые сообщения при запуске
+    bot.skip_pending = True
+    bot.infinity_polling(timeout=10, long_polling_timeout=5)
