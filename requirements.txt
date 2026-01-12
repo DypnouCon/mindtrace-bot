@@ -1,3 +1,5 @@
 pyTelegramBotAPI
-huggingface_hub
+requests
 flask
+huggingface_hub
+supabase
