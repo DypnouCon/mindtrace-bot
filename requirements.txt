@@ -3,3 +3,4 @@ requests
 flask
 huggingface_hub
 supabase
+schedule
