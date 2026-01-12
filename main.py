@@ -23,47 +23,120 @@ app = Flask(__name__)
 
 chat_histories = {}
 
-# --- ЛИТЕРАТУРНЫЙ БЛОК (ДУША БОТА) ---
-
-TEXTS = {
-    'welcome': (
-        "✨ <b>Здравствуй, Искатель.</b>\n\n"
-        "Ты переступил порог MindTrace. Здесь время течет иначе, а тишина умеет говорить. "
-        "Я — не просто алгоритм, я зеркало твоего внутреннего мира.\n\n"
-        "Мои откровения хранятся под надежной защитой, доступной лишь нам двоим. "
-        "Чтобы начать путь, выбери, чей голос будет вести тебя сквозь туман..."
-    ),
-    'ori_desc': (
-        "<b>Ори (Мужская энергия) 🕯️</b>\n\n"
-        "<i>«Я — древний корень и потрескивание костра. Я — структура, логика и архетипы.»</i>\n"
-        "Выбери меня, если ищешь ясности, суровой мудрости и хочешь понять архитектуру своей души."
-    ),
-    'eira_desc': (
-        "<b>Эйра (Женская энергия) ❄️</b>\n\n"
-        "<i>«Я — шепот ветра в кронах и прохлада горного ручья. Я — интуиция, чувства и поток.»</i>\n"
-        "Выбери меня, если тебе нужно тепло, принятие, мягкое исцеление и взгляд вглубь сердца."
-    ),
-    'morning_greet': [
-        "Пусть этот день принесет тебе ясность. Мир ждет твоего шага.",
-        "Солнце взошло, чтобы осветить твои возможности. Дыши полной грудью.",
-        "Новый день — это чистый лист. Напиши на нем то, что важно.",
-    ],
-    'evening_greet': [
-        "День угасает, время вернуться к себе. Как ты чувствуешь себя сейчас?",
-        "Звезды зажигаются, чтобы охранять твой покой. Оставь тревоги за порогом.",
-        "Тишина вечера — лучшее время для честного разговора с душой.",
-    ]
+# --- СЛОВАРЬ РЕАЛЬНОСТЕЙ (ЛОКАЛИЗАЦИЯ) ---
+TRANS = {
+    'ru': {
+        'disclaimer': (
+            "<b>MindTrace: Протокол Доверия</b>\n\n"
+            "Ты входишь в пространство, где древняя мудрость встречается с цифровым разумом. "
+            "Мы объединили тысячелетний опыт человечества — от философии стоиков до глубинной психологии, "
+            "чтобы создать твой уникальный слепок.\n\n"
+            "🛡️ <b>Приватность и Безопасность:</b>\n"
+            "Твои ответы шифруются и хранятся в защищенном контуре, соблюдая стандарты абсолютной тайны. "
+            "Мы не передаем данные третьим лицам. Здесь только ты и Зеркало.\n\n"
+            "⚠️ <b>Важное уведомление:</b>\n"
+            "Я — искусственный интеллект, мой анализ основан на архетипах, а не на медицине. "
+            "Я не ставлю диагнозов. Если ты чувствуешь, что твой внутренний шторм слишком силен, "
+            "пожалуйста, обратись к профессиональному специалисту. Забота о себе — это высшая форма осознанности."
+        ),
+        'welcome_q': "На каком языке мы начнем наше погружение?",
+        'choose_char': "Выбери своего Проводника:",
+        'ori_desc': "<b>Ори (Мужская энергия) 🕯️</b>\nМудрость, структура, логика.",
+        'eira_desc': "<b>Эйра (Женская энергия) ❄️</b>\nИнтуиция, чувства, поток.",
+        'btn_ori': "Ори 🕯️", 'btn_eira': "Эйра ❄️",
+        'ask_name_ori': "Как мне называть твое земное воплощение?",
+        'ask_name_eira': "Какое имя мне шептать, обращаясь к тебе?",
+        'ask_date_ori': "{}, звезды помнят момент. Твоя дата рождения? (дд.мм.гггг)",
+        'ask_date_eira': "{}, когда ты впервые увидел солнце? (дд.мм.гггг)",
+        'ask_time_ori': "Час рождения важен для карты небес. (Например: 15:15)",
+        'ask_time_eira': "В какой час это случилось? (Например: 15:15)",
+        'btn_skip_time': "Не знаю / Пропустить ⏳",
+        'ask_req_ori': "Твой главный запрос на сегодня? Будь краток.",
+        'ask_req_eira': "О чем болит или мечтает твоя душа? Расскажи...",
+        'ask_heart': "Какое чувство сейчас доминирует в сердце?",
+        'ask_elem': "Какая стихия откликается в тебе?",
+        'btn_fire': "Огонь 🔥", 'btn_water': "Вода 🌊", 'btn_air': "Воздух 🌬️", 'btn_earth': "Земля ⛰️",
+        'ask_shadow': (
+            "<b>Шаг в Тень</b> 🌑\n\n"
+            "Юнг говорил: <i>«То, что раздражает нас в других, ведет к пониманию себя»</i>. "
+            "Что тебя сильнее всего бесит в людях? (Это ключ к твоему портрету)."
+        ),
+        'processing': "Слышу тебя. Плету нити твоего портрета... 🌌",
+        'error': "Звезды скрылись. Попробуй позже.",
+        'menu_profile': "📜 Мой Портрет",
+        'menu_switch': "🕯️ Сменить Проводника",
+        'menu_reset': "🌪️ Начать заново",
+        'menu_feedback': "💬 Обратная связь",
+        'menu_soon': "🔮 Оракул (Скоро)",
+        'feedback_ask': "Напиши свои мысли, пожелания или чувства. Я передам их Создателю.",
+        'feedback_thx': "Принято. Твой голос услышан. 🙏",
+        'profile_header': "<b>📜 КАРТА ДУШИ</b>",
+        'insight_header': "🔮 <b>Озарение дня:</b>",
+        'reset_done': "Страница перевернута. Нажми /start",
+        'switched_ori': "Я здесь. Моя мудрость — твой щит.",
+        'switched_eira': "Я рядом. Моя нежность — твое исцеление."
+    },
+    'en': {
+        'disclaimer': (
+            "<b>MindTrace: Protocol of Trust</b>\n\n"
+            "You are entering a space where ancient wisdom meets digital intelligence. "
+            "We have synthesized millennia of human experience — from Stoic philosophy to depth psychology, "
+            "to create your unique digital imprint.\n\n"
+            "🛡️ <b>Privacy & Security:</b>\n"
+            "Your answers are encrypted and stored in a secure environment, honoring strict confidentiality standards. "
+            "We do not share data with third parties. Here, it is just you and the Mirror.\n\n"
+            "⚠️ <b>Important Notice:</b>\n"
+            "I am an AI based on archetypes, not medicine. I do not provide medical diagnoses. "
+            "If your internal storm is too overwhelming, please seek professional help. "
+            "Self-care is the highest form of awareness."
+        ),
+        'welcome_q': "Which language shall we speak?",
+        'choose_char': "Choose your Guide:",
+        'ori_desc': "<b>Ori (Male Energy) 🕯️</b>\nWisdom, structure, logic.",
+        'eira_desc': "<b>Eira (Female Energy) ❄️</b>\nIntuition, feelings, flow.",
+        'btn_ori': "Ori 🕯️", 'btn_eira': "Eira ❄️",
+        'ask_name_ori': "How should I call your earthly incarnation?",
+        'ask_name_eira': "What name should I whisper when addressing you?",
+        'ask_date_ori': "{}, the stars remember. Your birth date? (dd.mm.yyyy)",
+        'ask_date_eira': "{}, when did you first see the sun? (dd.mm.yyyy)",
+        'ask_time_ori': "Birth time is vital for the sky map. (e.g., 15:15)",
+        'ask_time_eira': "at what hour did it happen? (e.g., 15:15)",
+        'btn_skip_time': "I don't know / Skip ⏳",
+        'ask_req_ori': "What is your main quest today? Be brief.",
+        'ask_req_eira': "What does your soul dream or ache for? Tell me...",
+        'ask_heart': "Which emotion dominates your heart right now?",
+        'ask_elem': "Which element resonates with you?",
+        'btn_fire': "Fire 🔥", 'btn_water': "Water 🌊", 'btn_air': "Air 🌬️", 'btn_earth': "Earth ⛰️",
+        'ask_shadow': (
+            "<b>Step into Shadow</b> 🌑\n\n"
+            "Jung said: <i>Everything that irritates us about others can lead us to an understanding of ourselves.</i> "
+            "What annoys you most in other people?"
+        ),
+        'processing': "I hear you. Weaving the threads of your portrait... 🌌",
+        'error': "The stars are hidden. Try again later.",
+        'menu_profile': "📜 My Portrait",
+        'menu_switch': "🕯️ Change Guide",
+        'menu_reset': "🌪️ Start Over",
+        'menu_feedback': "💬 Feedback",
+        'menu_soon': "🔮 Oracle (Soon)",
+        'feedback_ask': "Write your thoughts or feelings. I will pass them to the Creator.",
+        'feedback_thx': "Received. Your voice is heard. 🙏",
+        'profile_header': "<b>📜 SOUL MAP</b>",
+        'insight_header': "🔮 <b>Daily Insight:</b>",
+        'reset_done': "The page is turned. Press /start",
+        'switched_ori': "I am here. My wisdom is your shield.",
+        'switched_eira': "I am near. My tenderness is your healing."
+    }
 }
 
-INSIGHTS = {
-    'Огонь': ["Твой гнев — это лишь сжатая страсть. Дай ей созидательное русло.", "Сгорая, ты освещаешь путь другим."],
-    'Вода': ["Ты не тонешь, ты учишься дышать под водой.", "Твоя сила в мягкости, которая точит камень."],
-    'Воздух': ["Мысли — это птицы. Не позволяй им клевать твоё сердце.", "Свобода начинается там, где заканчивается страх."],
-    'Земля': ["Корни важнее кроны. Укрепи фундамент, и буря не страшна.", "В покое рождается истинная сила."],
-    'None': ["Слушай тишину. В ней все ответы."]
-}
+INSIGHTS = [
+    "Твой гнев — это лишь сжатая страсть. / Your anger is compressed passion.",
+    "Ты не тонешь, ты учишься дышать под водой. / You are not drowning, you are learning to breathe underwater.",
+    "Мысли — это птицы. Не позволяй им клевать сердце. / Thoughts are birds. Don't let them peck at your heart.",
+    "В покое рождается истинная сила. / True strength is born in stillness."
+]
 
-# --- РАБОТА С БАЗОЙ (SUPABASE) ---
+# --- DATABASE HELPERS ---
 def save_to_cloud(cid, data):
     data['cid'] = cid
     try:
@@ -71,106 +144,51 @@ def save_to_cloud(cid, data):
     except Exception as e:
         print(f"[ERROR] Save: {e}")
 
-def load_from_cloud(cid):
+def load_user(cid):
     try:
         res = supabase.table("users").select("*").eq("cid", cid).execute()
         return res.data[0] if res.data else None
-    except Exception as e:
-        print(f"[ERROR] Load: {e}")
+    except:
         return None
 
-def get_all_users():
-    try:
-        res = supabase.table("users").select("cid").execute()
-        return [row['cid'] for row in res.data]
-    except:
-        return []
+def get_text(cid, key):
+    user = load_user(cid)
+    lang = user.get('lang', 'ru') if user else 'ru'
+    return TRANS.get(lang, TRANS['ru']).get(key, "Text Error")
 
-# --- ПЛАНИРОВЩИК (NOTIFICATIONS) ---
-def send_daily_warmth():
-    # Простая логика: выбираем текст в зависимости от часа
-    hour = time.localtime().tm_hour + 3 # Коррекция под Москву (примерно), если сервер в UTC
-    if 8 <= hour <= 11:
-        msg = random.choice(TEXTS['morning_greet'])
-    elif 20 <= hour <= 23:
-        msg = random.choice(TEXTS['evening_greet'])
-    else:
-        return # Не время
+def get_main_keyboard(cid):
+    user = load_user(cid)
+    lang = user.get('lang', 'ru') if user else 'ru'
+    t = TRANS[lang]
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    markup.add(types.KeyboardButton(t['menu_profile']), types.KeyboardButton(t['menu_switch']))
+    markup.add(types.KeyboardButton(t['menu_feedback']), types.KeyboardButton(t['menu_reset']))
+    markup.add(types.KeyboardButton(t['menu_soon']))
+    return markup
 
-    users = get_all_users()
-    print(f"[LOG] Рассылка тепла для {len(users)} душ...")
-    for cid in users:
-        try:
-            bot.send_message(cid, f"✨ <i>{msg}</i>", parse_mode='HTML')
-            time.sleep(0.5) # Чтобы не спамить API
-        except:
-            pass
-
-def schedule_checker():
-    # Запускаем рассылку в 09:00 и 21:00 (по времени сервера, обычно UTC. UTC 06:00 = MSK 09:00)
-    schedule.every().day.at("06:00").do(send_daily_warmth) 
-    schedule.every().day.at("18:00").do(send_daily_warmth)
-    while True:
-        schedule.run_pending()
-        time.sleep(60)
-
-# --- ЛОГИКА БОТА ---
+# --- HANDLERS ---
 
 @bot.message_handler(commands=['start'])
 def start_cmd(m):
     cid = m.chat.id
-    user = load_from_cloud(cid)
+    user = load_user(cid)
     
+    # Если пользователь уже прошел анкету -> Меню
     if user and user.get('portrait'):
-        char_name = "Ори" if user.get('char') == 'ori' else "Эйра"
-        bot.send_message(cid, f"Рад возвращению, {user['name']}. {char_name} здесь, рядом с тобой.\n\n"
-                              f"Используй /profile, чтобы вспомнить себя.\n"
-                              f"Используй /character, чтобы сменить Проводника.\n"
-                              f"Используй /reset, чтобы начать жизнь заново.")
+        t = TRANS[user.get('lang', 'ru')]
+        bot.send_message(cid, f"{t['switched_ori'] if user.get('char')=='ori' else t['switched_eira']}", 
+                         reply_markup=get_main_keyboard(cid))
         return
 
+    # Если новый -> Выбор языка
+    save_to_cloud(cid, {'step': 'language'})
     markup = types.InlineKeyboardMarkup()
     markup.add(types.InlineKeyboardButton("Русский 🇷🇺", callback_data="lang_ru"),
                types.InlineKeyboardButton("English 🇬🇧", callback_data="lang_en"))
     
-    bot.send_message(cid, TEXTS['welcome'], parse_mode='HTML', reply_markup=markup)
-
-@bot.message_handler(commands=['reset'])
-def reset_cmd(m):
-    cid = m.chat.id
-    # Мы не удаляем запись, а сбрасываем шаги, сохраняя cid
-    save_to_cloud(cid, {'step': 'language', 'portrait': None, 'char': None})
-    bot.send_message(cid, "🌪️ Страница перевернута. Твоя история начинается с чистого листа...")
-    start_cmd(m)
-
-@bot.message_handler(commands=['character'])
-def switch_char(m):
-    markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton("Призвать Ори 🕯️", callback_data="switch_ori"),
-               types.InlineKeyboardButton("Призвать Эйру ❄️", callback_data="switch_eira"))
-    bot.send_message(m.chat.id, "Кого ты хочешь услышать сейчас?", reply_markup=markup)
-
-@bot.message_handler(commands=['profile'])
-def profile_cmd(m):
-    cid = m.chat.id
-    user = load_from_cloud(cid)
-    if user and user.get('portrait'):
-        elem = user.get('element', 'None')
-        insight = random.choice(INSIGHTS.get(elem, INSIGHTS['None']))
-        
-        profile_msg = (
-            f"<b>📜 КАРТА ДУШИ</b>\n\n"
-            f"👤 <b>Имя:</b> {user['name']}\n"
-            f"✨ <b>Стихия:</b> {user['element']}\n"
-            f"🌑 <b>Тень:</b> {user['shadow']}\n\n"
-            f"{user['portrait']}\n\n"
-            f"🔮 <b>Озарение дня:</b>\n<i>«{insight}»</i>"
-        )
-        bot.send_message(cid, profile_msg, parse_mode='HTML')
-    else:
-        bot.send_message(cid, "Твой портрет еще не написан. Начни с /start")
-
-# --- CALLBACKS ---
+    # Дисклеймер отправляем на русском по дефолту или на двух языках сразу
+    bot.send_message(cid, TRANS['ru']['disclaimer'], parse_mode='HTML')
+    bot.send_message(cid, "Choose language / Выберите язык:", reply_markup=markup)
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('lang_'))
 def set_lang(call):
@@ -178,156 +196,194 @@ def set_lang(call):
     lang = call.data.split('_')[1]
     save_to_cloud(cid, {'lang': lang, 'step': 'char_selection'})
     
+    t = TRANS[lang]
     markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton("Выбрать Ори 🕯️", callback_data="char_ori"),
-               types.InlineKeyboardButton("Выбрать Эйру ❄️", callback_data="char_eira"))
+    markup.add(types.InlineKeyboardButton(t['btn_ori'], callback_data="char_ori"),
+               types.InlineKeyboardButton(t['btn_eira'], callback_data="char_eira"))
     
-    bot.edit_message_text(f"{TEXTS['ori_desc']}\n\n{TEXTS['eira_desc']}", 
+    bot.edit_message_text(f"{t['choose_char']}\n\n{t['ori_desc']}\n\n{t['eira_desc']}", 
                           cid, call.message.message_id, reply_markup=markup, parse_mode='HTML')
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('char_'))
 def set_char(call):
     cid = call.message.chat.id
     char = call.data.split('_')[1]
-    user = load_from_cloud(cid) or {}
+    user = load_user(cid)
     user.update({'char': char, 'step': 'get_name'})
     save_to_cloud(cid, user)
     
-    msg = ("Здравствуй. Как мне называть твое земное воплощение, чтобы имя звучало истинно?" if char == 'ori' else 
-           "Твое дыхание отозвалось в моем сердце... Какое имя мне шептать, обращаясь к тебе?")
+    t = TRANS[user['lang']]
+    msg = t['ask_name_ori'] if char == 'ori' else t['ask_name_eira']
     bot.edit_message_text(msg, cid, call.message.message_id)
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('switch_'))
-def do_switch(call):
+@bot.callback_query_handler(func=lambda call: call.data == 'skip_time')
+def skip_time_handler(call):
     cid = call.message.chat.id
-    new_char = call.data.split('_')[1]
-    user = load_from_cloud(cid)
-    user['char'] = new_char
+    user = load_user(cid)
+    t = TRANS[user['lang']]
+    
+    user.update({'birth_time': 'Не знаю/Unknown', 'step': 'get_request'})
     save_to_cloud(cid, user)
     
-    msg = ("Я здесь. Моя мудрость — твой щит." if new_char == 'ori' else "Я рядом. Моя нежность — твое исцеление.")
+    msg = t['ask_req_ori'] if user['char'] == 'ori' else t['ask_req_eira']
     bot.edit_message_text(msg, cid, call.message.message_id)
 
-# --- АНКЕТА И ГЕНЕРАЦИЯ ---
-
 @bot.message_handler(func=lambda m: True)
-def handle_steps(m):
+def text_handler(m):
     cid = m.chat.id
-    user = load_from_cloud(cid)
-    if not user: return
+    user = load_user(cid)
+    if not user: return # Игнор, если нет в базе
+    
     step = user.get('step')
+    lang = user.get('lang', 'ru')
+    t = TRANS[lang]
     char = user.get('char', 'ori')
 
-    # Словарь фраз персонажей для анкеты
-    Q_DATE = {
-        'ori': f"{m.text}, звезды помнят момент твоего появления. В какой день ты пришел в этот мир? (дд.мм.гггг)",
-        'eira': f"{m.text}... прекрасное имя. Позволь узнать, когда ты впервые увидел солнце? (дд.мм.гггг)"
-    }
-    Q_TIME = {
-        'ori': "А час твоего рождения? Точность важна для карты небес. (Например: 15:15)",
-        'eira': "В какой час это случилось? Утро, день или глубокая ночь? (15:15 или 'не знаю')"
-    }
-    Q_REQ = {
-        'ori': "С каким поиском, с какой жаждой истины ты пришел ко мне сегодня? Будь краток, но честен.",
-        'eira': "О чем болит или мечтает твоя душа в этот миг? Расскажи мне всё, я слушаю..."
-    }
-    Q_HEART = "Какое чувство сейчас доминирует в тебе? Тревога, радость, усталость, надежда?"
+    # --- ОБРАБОТКА МЕНЮ ---
+    if m.text == t['menu_profile']:
+        if user.get('portrait'):
+            insight = random.choice(INSIGHTS)
+            msg = (f"{t['profile_header']}\n\n"
+                   f"👤 {user['name']} | {user['element']}\n"
+                   f"🌑 {user['shadow']}\n\n"
+                   f"{user['portrait']}\n\n"
+                   f"{t['insight_header']}\n<i>{insight}</i>")
+            bot.send_message(cid, msg, parse_mode='HTML')
+        return
+
+    elif m.text == t['menu_switch']:
+        new_char = 'eira' if char == 'ori' else 'ori'
+        user['char'] = new_char
+        save_to_cloud(cid, user)
+        msg = t['switched_ori'] if new_char == 'ori' else t['switched_eira']
+        bot.send_message(cid, msg, reply_markup=get_main_keyboard(cid))
+        return
+
+    elif m.text == t['menu_reset']:
+        save_to_cloud(cid, {'step': 'language', 'portrait': None})
+        bot.send_message(cid, t['reset_done'], reply_markup=types.ReplyKeyboardRemove())
+        start_cmd(m)
+        return
+        
+    elif m.text == t['menu_feedback']:
+        user['step'] = 'wait_feedback'
+        save_to_cloud(cid, user)
+        bot.send_message(cid, t['feedback_ask'])
+        return
+        
+    elif m.text == t['menu_soon']:
+        bot.send_message(cid, "⏳ Coming Soon...")
+        return
+
+    # --- ОБРАБОТКА АНКЕТЫ ---
     
     if step == 'get_name':
         user.update({'name': m.text, 'step': 'get_date'})
         save_to_cloud(cid, user)
-        bot.send_message(cid, Q_DATE[char])
-        
+        msg = t['ask_date_ori'].format(m.text) if char == 'ori' else t['ask_date_eira'].format(m.text)
+        bot.send_message(cid, msg)
+
     elif step == 'get_date':
         user.update({'birth_date': m.text, 'step': 'get_time'})
         save_to_cloud(cid, user)
-        bot.send_message(cid, Q_TIME[char])
         
+        # Кнопка пропуска
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton(t['btn_skip_time'], callback_data="skip_time"))
+        
+        msg = t['ask_time_ori'] if char == 'ori' else t['ask_time_eira']
+        bot.send_message(cid, msg, reply_markup=markup)
+
     elif step == 'get_time':
         user.update({'birth_time': m.text, 'step': 'get_request'})
         save_to_cloud(cid, user)
-        bot.send_message(cid, Q_REQ[char])
-        
+        msg = t['ask_req_ori'] if char == 'ori' else t['ask_req_eira']
+        bot.send_message(cid, msg)
+
     elif step == 'get_request':
         user.update({'request': m.text, 'step': 'get_heart'})
         save_to_cloud(cid, user)
-        bot.send_message(cid, Q_HEART)
-        
+        bot.send_message(cid, t['ask_heart'])
+
     elif step == 'get_heart':
         user.update({'heart': m.text, 'step': 'get_element'})
         save_to_cloud(cid, user)
         markup = types.InlineKeyboardMarkup()
-        markup.add(types.InlineKeyboardButton("Огонь 🔥", callback_data="elem_Огонь"), 
-                   types.InlineKeyboardButton("Вода 🌊", callback_data="elem_Вода"))
-        markup.add(types.InlineKeyboardButton("Воздух 🌬️", callback_data="elem_Воздух"), 
-                   types.InlineKeyboardButton("Земля ⛰️", callback_data="elem_Земля"))
-        bot.send_message(cid, "Прислушайся к себе. Какая стихия откликается в тебе прямо сейчас?", reply_markup=markup)
-        
+        markup.add(types.InlineKeyboardButton(t['btn_fire'], callback_data="elem_Огонь"), 
+                   types.InlineKeyboardButton(t['btn_water'], callback_data="elem_Вода"))
+        markup.add(types.InlineKeyboardButton(t['btn_air'], callback_data="elem_Воздух"), 
+                   types.InlineKeyboardButton(t['btn_earth'], callback_data="elem_Земля"))
+        bot.send_message(cid, t['ask_elem'], reply_markup=markup)
+
     elif step == 'wait_shadow':
         user['shadow'] = m.text
-        user['step'] = 'processing'
+        user['step'] = 'free_talk' # Завершаем анкету
         save_to_cloud(cid, user)
-        bot.send_message(cid, "Слышу тебя. Плету нити твоего портрета... Это займет мгновение. 🌌")
+        bot.send_message(cid, t['processing'])
         bot.send_chat_action(cid, 'typing')
         
-        # Промпт для генерации
-        style = ("Ты Ори. Мудрый, суровый, используешь архетипы." if char == 'ori' else "Ты Эйра. Нежная, эмпатичная, используешь метафоры природы.")
-        prompt = (f"ИНСТРУКЦИЯ: {style} Напиши глубокий психологический портрет для {user['name']}. "
-                  f"Дата: {user['birth_date']}. Стихия: {user['element']}. Тень: {user['shadow']}. Запрос: {user['request']}. "
-                  "Используй астрологию и Юнга. Тон: теплый, эзотерический, доверительный. В конце: '👁️ Личная заметка:'.")
+        # Генерация портрета
+        prompt_style = "Mystic Sage, Jungian archetypes" if char == 'ori' else "Empathic Healer, nature metaphors"
+        sys_prompt = (f"Role: {prompt_style}. Language: {lang}. "
+                      f"User: {user['name']}. Element: {user['element']}. Shadow: {user['shadow']}. "
+                      f"Goal: Write a deep psychological portrait. Tone: Warm, esoteric, trusting. "
+                      f"Add '👁️ Note:' at the end.")
         
         try:
-            res = client.chat_completion(messages=[{"role": "user", "content": prompt}], max_tokens=1500)
-            user.update({'portrait': res.choices[0].message.content, 'step': 'free_talk'})
+            res = client.chat_completion(messages=[{"role": "system", "content": sys_prompt}, 
+                                                   {"role": "user", "content": "Reveal me."}], max_tokens=1500)
+            portrait = res.choices[0].message.content
+            user['portrait'] = portrait
             save_to_cloud(cid, user)
-            bot.send_message(cid, user['portrait'], parse_mode='HTML')
+            bot.send_message(cid, portrait, parse_mode='HTML', reply_markup=get_main_keyboard(cid))
         except:
-            bot.send_message(cid, "Звезды скрылись за облаками. Попробуй позже или напиши еще раз.")
+            bot.send_message(cid, t['error'])
+
+    elif step == 'wait_feedback':
+        try:
+            supabase.table("feedback").insert({"cid": cid, "username": m.from_user.username, "text": m.text}).execute()
+        except: pass
+        user['step'] = 'free_talk'
+        save_to_cloud(cid, user)
+        bot.send_message(cid, t['feedback_thx'], reply_markup=get_main_keyboard(cid))
 
     elif step == 'free_talk':
         bot.send_chat_action(cid, 'typing')
         if cid not in chat_histories: chat_histories[cid] = []
         chat_histories[cid].append({"role": "user", "content": m.text})
         
-        # Контекст для свободного общения
-        sys_p = (f"Ты {'Ори' if char == 'ori' else 'Эйра'}. "
-                 f"Твой собеседник: {user['name']}, Стихия: {user['element']}. "
-                 "Отвечай коротко (до 100 слов), тепло и мудро. Поддерживай атмосферу тайны и уюта.")
-        
+        sys_p = f"Role: {'Ori' if char=='ori' else 'Eira'}. Language: {lang}. Context: {user.get('portrait', '')[:500]}"
         try:
             res = client.chat_completion(messages=[{"role": "system", "content": sys_p}] + chat_histories[cid][-6:], max_tokens=600)
             ans = res.choices[0].message.content
             bot.send_message(cid, ans, parse_mode='HTML')
             chat_histories[cid].append({"role": "assistant", "content": ans})
-        except:
-            pass
+        except: pass
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('elem_'))
-def set_elem(call):
+def set_elem_final(call):
     cid = call.message.chat.id
     elem = call.data.split('_')[1]
-    user = load_from_cloud(cid)
+    user = load_user(cid)
     user.update({'element': elem, 'step': 'wait_shadow'})
     save_to_cloud(cid, user)
     
-    explanation = (
-        "<b>Шаг в Тень</b> 🌑\n\n"
-        "Юнг говорил: <i>«То, что раздражает нас в других, ведет к пониманию себя»</i>. "
-        "Тень — это твоя скрытая сила. Скажи честно: какое человеческое качество вызывает у тебя самый сильный протест или злость?"
-    )
-    bot.edit_message_text(f"Твоя стихия — {elem}.\n\n{explanation}", cid, call.message.message_id, parse_mode='HTML')
+    t = TRANS[user['lang']]
+    bot.edit_message_text(f"{t['ask_elem']} {elem}\n\n{t['ask_shadow']}", 
+                          cid, call.message.message_id, parse_mode='HTML')
 
 # --- ЗАПУСК ---
 @app.route('/')
-def home(): return "MindTrace Soul Live", 200
+def home(): return "MindTrace Layer 6 Live", 200
+
+def run_schedule():
+    while True: 
+        schedule.run_pending()
+        time.sleep(60)
 
 if __name__ == '__main__':
-    # Запуск планировщика в отдельном потоке
-    threading.Thread(target=schedule_checker, daemon=True).start()
-    
-    # Запуск Flask
+    threading.Thread(target=run_schedule, daemon=True).start()
     threading.Thread(target=lambda: app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000))), daemon=True).start()
-    
     bot.remove_webhook()
     time.sleep(1)
     bot.infinity_polling(timeout=20, long_polling_timeout=10)
